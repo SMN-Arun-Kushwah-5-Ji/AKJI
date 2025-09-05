@@ -1,10 +1,11 @@
 ## Hi there 👋
 
 ## SMN-Arun-Kushwah-5-Ji 
-[SMN] = Shri Man Narayan / Narayani 
-[Name & Cast] = Arun Kushwah 
-[5] = Family Members 
-[Ji] = Respect Ke Liye
+**[SMN]** = *Shri Man Narayan / Narayani* 
+**[Name & Cast]** = *Arun Kushwah* 
+**[5]** = *Family Members* 
+**[Ji]** = *Respect Ke Liye*
+**[AKJI]** = *ARUN KUSHWAH JI*
 
 Here are some ideas to get you started:
 
