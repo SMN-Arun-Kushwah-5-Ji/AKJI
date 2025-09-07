@@ -20,6 +20,7 @@ print_banner() {
   echo -e "${color}                  [5] = Family Members                   ${reset}"
   echo -e "${color}                  [Ji] = Respect Ke Liye                   ${reset}"
   echo -e "${color}                  [AKJI] = ARUN KUSHWAH JI                   ${reset}"
+  echo -e "${color}                  }=[|:|[_SMN_AKJI_5_]|:|]~>                   ${reset}"
   echo -e "${color}==============================================================${reset}"
   echo ""
 }
