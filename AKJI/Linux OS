@@ -1,24 +1,29 @@
 #!/bin/bash
 
-# ---------------- Colors ----------------
-colors=("\033[1;31m" "\033[1;32m" "\033[1;33m" "\033[1;34m" "\033[1;35m" "\033[1;36m")
+# ================= Colors =================
+colors=(
+  "\033[1;31m" # Red
+  "\033[1;32m" # Green
+  "\033[1;33m" # Yellow
+  "\033[1;34m" # Blue
+  "\033[1;35m" # Magenta
+  "\033[1;36m" # Cyan
+)
 reset="\033[0m"
 color_index=0
+width=64
 
-# ---------------- Banner ----------------
+# ================= Banner =================
 print_banner() {
   clear
   color_index=$(( (color_index + 1) % ${#colors[@]} ))
-  width=64  # fixed width for centering
 
-  # Function: print words with different colors
-  multicolor_center() {
+  center_multicolor() {
     local text="$1"
     local words=($text)
     local total_len=${#text}
     local pad=$(( (width - total_len) / 2 ))
-    printf "%*s" $pad ""  # left padding
-
+    printf "%*s" $pad ""
     local i=0
     for w in "${words[@]}"; do
       local c=${colors[$(( i % ${#colors[@]} ))]}
@@ -29,20 +34,33 @@ print_banner() {
   }
 
   echo -e "${colors[0]}================================================================${reset}"
-  multicolor_center "Mega Kali & Parrot OS Tools Installer"
-  multicolor_center "(500+ Tools Included)"
+  center_multicolor "Mega Kali & Parrot OS Tools Installer"
+  center_multicolor "(500+ Tools Included)"
   echo -e "${colors[1]}----------------------------------------------------------------${reset}"
-  multicolor_center "Developed by Arun Kushwah"
-  multicolor_center "SMN-Arun-Kushwah-5-Ji"
+  center_multicolor "Developed by Arun Kushwah"
+  center_multicolor "SMN-Arun-Kushwah-5-Ji"
   echo -e "${colors[2]}----------------------------------------------------------------${reset}"
-  multicolor_center "[SMN]  = Shri Man Narayan / Narayani"
-  multicolor_center "[Name] = Arun Kushwah"
-  multicolor_center "[5]    = Family Members"
-  multicolor_center "[Ji]   = Respect Ke Liye"
-  multicolor_center "[AKJI] = Arun Kushwah Ji"
+  center_multicolor "[SMN]  = Shri Man Narayan / Narayani"
+  center_multicolor "[Name] = Arun Kushwah"
+  center_multicolor "[5]    = Family Members"
+  center_multicolor "[Ji]   = Respect Ke Liye"
+  center_multicolor "[AKJI] = Arun Kushwah Ji"
   echo -e "${colors[3]}----------------------------------------------------------------${reset}"
-  multicolor_center "}=[|:|[_SMN_AKJI_5_]|:|]~>"
+  center_multicolor "}=[|:|[_SMN_AKJI_5_]|:|]~>"
   echo -e "${colors[4]}================================================================${reset}"
+  echo ""
+}
+
+# ================= Tool Printing =================
+multicolor_inline() {
+  local text="$1"
+  local words=($text)
+  local i=0
+  for w in "${words[@]}"; do
+    local c=${colors[$(( i % ${#colors[@]} ))]}
+    echo -ne "${c}${w}${reset} "
+    ((i++))
+  done
   echo ""
 }
 
@@ -64,6 +82,7 @@ declare -A kali_tools=(
   ["Top 10 Tools"]="aircrack-ng burpsuite metasploit nmap wireshark sqlmap john hydra hashcat"
 )
 
+# Add extra Kali packages
 kali_extra_packages=(
   "masscan" "netdiscover" "arp-scan" "wpscan" "fern-wifi-cracker" "exploitdb" "medusa" "bulk-extractor" "dex2jar" "jd-gui"
   "slowloris" "hping3" "ettercap" "mitmproxy" "usbutils" "set"
@@ -77,7 +96,7 @@ declare -A parrot_tools=(
   ["Exploitation Tools"]="parrot-tools-exploitation metasploit-framework armitage beef-xss exploitdb"
   ["Password Attacks"]="parrot-tools-passwords john hydra hashcat medusa"
   ["Forensics"]="parrot-tools-forensics autopsy sleuthkit volatility bulk-extractor"
-  ["Reverse Engineering"]="parrot-tools-reverse-engineering gdb radare2 apktool dex2jar jd-gui"
+  ["Reverse Engineering"]="parrot-tools-re reverse-engineering gdb radare2 apktool dex2jar jd-gui"
   ["Reporting Tools"]="parrot-tools-reporting dradis faraday"
   ["Hardware Hacking"]="parrot-tools-hardware usbutils"
   ["Stress Testing"]="parrot-tools-stress-testing slowloris hping3"
@@ -87,13 +106,15 @@ declare -A parrot_tools=(
   ["Top 10 Tools"]="aircrack-ng burpsuite metasploit nmap wireshark sqlmap john hydra hashcat"
 )
 
+# Add extra Parrot packages
 parrot_extra_packages=(
   "masscan" "netdiscover" "arp-scan" "wpscan" "fern-wifi-cracker" "exploitdb" "medusa" "bulk-extractor" "dex2jar" "jd-gui"
   "slowloris" "hping3" "ettercap" "mitmproxy" "usbutils" "set"
 )
 
-# ---------------- Combine Tools ----------------
+# ---------------- Combine Kali + Parrot Tools ----------------
 declare -A combined_tools
+
 combine_tools() {
   combined_tools=()
   for key in "${!kali_tools[@]}"; do
@@ -111,13 +132,13 @@ combine_tools() {
   done
 }
 
-# ---------------- Installer ----------------
+# ================= Installer =================
 install_tools() {
   local os="$1"
   local category="$2"
   local packages="$3"
 
-  echo -e "\033[1;35m Installing $category packages for $os... \033[0m"
+  multicolor_inline "Installing $category packages for $os..."
 
   if command -v apt &>/dev/null; then
     sudo apt update
@@ -126,22 +147,22 @@ install_tools() {
     pkg update -y
     pkg install -y $packages
   else
-    echo -e "\033[1;31m No supported package manager found! \033[0m"
+    multicolor_inline "No supported package manager found!"
     return
   fi
 
-  echo -e "\033[1;32m $category installation for $os completed! \033[0m"
+  multicolor_inline "$category installation for $os completed!"
   read -p "Press Enter to continue..."
 }
 
-# ---------------- Category Selector ----------------
+# ================= Category Selector =================
 select_category() {
   local os="$1"
   local -n tools_ref="$2"
 
   while true; do
     print_banner
-    echo "Selected OS: $os"
+    multicolor_inline "Selected OS: $os"
     echo "Select Tool Category to install:"
     local i=1
     local categories=()
@@ -160,19 +181,19 @@ select_category() {
     elif [[ "$choice" -eq $i ]]; then
       break
     else
-      echo -e "\033[1;31m Invalid option! Try again. \033[0m"
+      multicolor_inline "Invalid option! Try again."
       sleep 1
     fi
   done
 }
 
-# ---------------- Main Menu ----------------
+# ================= Main Menu =================
 while true; do
   print_banner
-  echo "Select Operating System tools to install:"
+  multicolor_inline "Select Operating System tools to install:"
   echo "1) Kali Linux"
   echo "2) Parrot OS"
-  echo "3) OS Linux (Kali + Parrot combined)"
+  echo "3) Linux OS (Kali + Parrot combined)"
   echo "4) Exit"
   echo "================================================================"
   read -p "Choice: " os_choice
@@ -188,14 +209,14 @@ while true; do
       ;;
     3)
       combine_tools
-      select_category "OS Linux (Combined)" combined_tools
+      select_category "Linux OS" combined_tools
       ;;
     4)
-      echo -e "\033[1;32m Exiting. Happy hacking! \033[0m"
+      multicolor_inline "Exiting. Happy hacking!"
       exit 0
       ;;
     *)
-      echo -e "\033[1;31m Invalid option! Try again. \033[0m"
+      multicolor_inline "Invalid option! Try again."
       sleep 1
       ;;
   esac
