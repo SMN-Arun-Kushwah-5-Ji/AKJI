@@ -1,0 +1,184 @@
+#!/bin/bash
+
+# Colors for banner cycling
+colors=("\033[1;31m" "\033[1;32m" "\033[1;33m" "\033[1;34m" "\033[1;35m" "\033[1;36m")
+reset="\033[0m"
+
+color_index=0
+
+print_banner() {
+  clear
+  color_index=$(( (color_index + 1) % ${#colors[@]} ))
+  color=${colors[$color_index]}
+  echo -e "${color}==============================================================${reset}"
+  echo -e "${color}        Mega Kali & Parrot OS Tools Installer + OS Linux       ${reset}"
+  echo -e "${color}                     (500+ Tools Included)                    ${reset}"
+  echo -e "${color}                  Developed by Arun Kushwah                   ${reset}"
+  echo -e "${color}                  SMN-Arun-Kushwah-5-Ji                   ${reset}"
+  echo -e "${color}                  [SMN] = Shri Man Narayan / Narayani                    ${reset}"
+  echo -e "${color}                  [Name & Cast] = Arun Kushwah                   ${reset}"
+  echo -e "${color}                  [5] = Family Members                   ${reset}"
+  echo -e "${color}                  [Ji] = Respect Ke Liye                   ${reset}"
+  echo -e "${color}                  [AKJI] = ARUN KUSHWAH JI                   ${reset}"
+  echo -e "${color}==============================================================${reset}"
+  echo ""
+}
+
+# ------------------- Kali Tools -------------------
+declare -A kali_tools=(
+  ["Information Gathering"]="kali-linux-information-gathering nmap dnsenum theharvester maltego dnsrecon recon-ng masscan netdiscover arp-scan"
+  ["Vulnerability Analysis"]="kali-linux-vulnerability-analysis nikto openvas wapiti sqlmap wpscan"
+  ["Wireless Attacks"]="kali-linux-wireless aircrack-ng reaver wifite bully fern-wifi-cracker"
+  ["Exploitation Tools"]="kali-linux-exploitation metasploit-framework armitage beef-xss exploitdb"
+  ["Password Attacks"]="kali-linux-passwords john hydra hashcat medusa"
+  ["Forensics"]="kali-linux-forensics autopsy sleuthkit volatility bulk-extractor"
+  ["Reverse Engineering"]="kali-linux-reverse-engineering gdb radare2 apktool dex2jar jd-gui"
+  ["Reporting Tools"]="kali-linux-reporting dradis faraday"
+  ["Hardware Hacking"]="kali-linux-hardware usbutils"
+  ["Stress Testing"]="kali-linux-stress-testing slowloris hping3"
+  ["Sniffing & Spoofing"]="kali-linux-sdr wireshark ettercap mitmproxy"
+  ["Maintainers Tools"]="kali-linux-maintainers-tools"
+  ["Social Engineering"]="kali-linux-social-engineering set social-engineer-toolkit"
+  ["Top 10 Tools"]="aircrack-ng burpsuite metasploit nmap wireshark sqlmap john hydra hashcat"
+)
+
+# Add extra Kali packages explicitly to expand tools count
+kali_extra_packages=(
+  "masscan" "netdiscover" "arp-scan" "wpscan" "fern-wifi-cracker" "exploitdb" "medusa" "bulk-extractor" "dex2jar" "jd-gui"
+  "slowloris" "hping3" "ettercap" "mitmproxy" "usbutils" "set"
+)
+
+# ------------------- Parrot Tools -------------------
+declare -A parrot_tools=(
+  ["Information Gathering"]="parrot-tools-info nmap dnsenum theharvester maltego dnsrecon recon-ng masscan netdiscover arp-scan"
+  ["Vulnerability Analysis"]="parrot-tools-vuln nikto openvas wapiti sqlmap wpscan"
+  ["Wireless Attacks"]="parrot-tools-wireless aircrack-ng reaver wifite bully fern-wifi-cracker"
+  ["Exploitation Tools"]="parrot-tools-exploitation metasploit-framework armitage beef-xss exploitdb"
+  ["Password Attacks"]="parrot-tools-passwords john hydra hashcat medusa"
+  ["Forensics"]="parrot-tools-forensics autopsy sleuthkit volatility bulk-extractor"
+  ["Reverse Engineering"]="parrot-tools-re reverse-engineering gdb radare2 apktool dex2jar jd-gui"
+  ["Reporting Tools"]="parrot-tools-reporting dradis faraday"
+  ["Hardware Hacking"]="parrot-tools-hardware usbutils"
+  ["Stress Testing"]="parrot-tools-stress-testing slowloris hping3"
+  ["Sniffing & Spoofing"]="parrot-tools-sdr wireshark ettercap mitmproxy"
+  ["Maintainers Tools"]="parrot-tools-maintainers-tools"
+  ["Social Engineering"]="parrot-tools-social-engineering set social-engineer-toolkit"
+  ["Top 10 Tools"]="aircrack-ng burpsuite metasploit nmap wireshark sqlmap john hydra hashcat"
+)
+
+# Add extra Parrot packages explicitly
+parrot_extra_packages=(
+  "masscan" "netdiscover" "arp-scan" "wpscan" "fern-wifi-cracker" "exploitdb" "medusa" "bulk-extractor" "dex2jar" "jd-gui"
+  "slowloris" "hping3" "ettercap" "mitmproxy" "usbutils" "set"
+)
+
+# ---------------- Combine Kali + Parrot Tools ----------------
+declare -A combined_tools
+
+combine_tools() {
+  combined_tools=()
+  for key in "${!kali_tools[@]}"; do
+    combined_tools["$key"]="${kali_tools[$key]}"
+  done
+  for key in "${!parrot_tools[@]}"; do
+    if [[ -v combined_tools[$key] ]]; then
+      # Merge unique packages
+      existing="${combined_tools[$key]}"
+      new="${parrot_tools[$key]}"
+      merged=$(echo -e "$existing\n$new" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+      combined_tools[$key]="$merged"
+    else
+      combined_tools[$key]="${parrot_tools[$key]}"
+    fi
+  done
+}
+
+# Installer function
+install_tools() {
+  local os="$1"
+  local category="$2"
+  local packages="$3"
+
+  echo -e "\033[1;35m Installing $category packages for $os... \033[0m"
+
+  # Check package manager & update
+  if command -v apt &>/dev/null; then
+    sudo apt update
+    sudo apt install -y $packages
+  elif command -v pkg &>/dev/null; then
+    pkg update -y
+    pkg install -y $packages
+  else
+    echo -e "\033[1;31m No supported package manager found! \033[0m"
+    return
+  fi
+
+  echo -e "\033[1;32m $category installation for $os completed! \033[0m"
+  read -p "Press Enter to continue..."
+}
+
+select_category() {
+  local os="$1"
+  local -n tools_ref="$2"
+
+  while true; do
+    print_banner
+    echo "Selected OS: $os"
+    echo "Select Tool Category to install:"
+    local i=1
+    local categories=()
+    for cat in "${!tools_ref[@]}"; do
+      echo "$i) $cat"
+      categories+=("$cat")
+      ((i++))
+    done
+    echo "$i) Back to OS selection"
+    echo "=============================================================="
+    read -p "Choice: " choice
+
+    if [[ "$choice" -ge 1 && "$choice" -le "${#categories[@]}" ]]; then
+      local cat_name="${categories[$((choice-1))]}"
+      install_tools "$os" "$cat_name" "${tools_ref[$cat_name]}"
+    elif [[ "$choice" -eq $i ]]; then
+      break
+    else
+      echo -e "\033[1;31m Invalid option! Try again. \033[0m"
+      sleep 1
+    fi
+  done
+}
+
+while true; do
+  print_banner
+  echo "Select Operating System tools to install:"
+  echo "1) Kali Linux"
+  echo "2) Parrot OS"
+  echo "3) OS Linux (Kali + Parrot combined)"
+  echo "4) Exit"
+  echo "=============================================================="
+  read -p "Choice: " os_choice
+
+  case $os_choice in
+    1)
+      # Add extra Kali packages to main kali_tools "Top 10 Tools"
+      kali_tools["Extra Kali Packages"]="${kali_extra_packages[*]}"
+      select_category "Kali Linux" kali_tools
+      ;;
+    2)
+      parrot_tools["Extra Parrot Packages"]="${parrot_extra_packages[*]}"
+      select_category "Parrot OS" parrot_tools
+      ;;
+    3)
+      combine_tools
+      select_category "OS Linux (Combined)" combined_tools
+      ;;
+    4)
+      echo -e "\033[1;32m Exiting. Happy hacking! \033[0m"
+      exit 0
+      ;;
+    *)
+      echo -e "\033[1;31m Invalid option! Try again. \033[0m"
+      sleep 1
+      ;;
+  esac
+done
