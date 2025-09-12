@@ -5,17 +5,22 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 
-ADB = "adb"  # Agar adb PATH mein nahi hai toh full path daalein
+ADB = "adb"  # agar adb PATH mein nahi hai toh yaha full path daalna
+
+# ---- Safe UI update helper ----
+def safe_ui_call(widget, func, *args, **kwargs):
+    widget.after(0, func, *args, **kwargs)
 
 def run_cmd(cmd):
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     return result.stdout.strip(), result.stderr.strip()
 
 def append_output(output_text, text):
-    output_text.insert(tk.END, text + "\n")
-    output_text.see(tk.END)
+    safe_ui_call(output_text, output_text.insert, tk.END, text + "\n")
+    safe_ui_call(output_text, output_text.see, tk.END)
 
-def connect_adb(ip, output_text, status_label):
+# ---- ADB Functions ----
+def connect_adb(ip, output_text, status_label, root):
     append_output(output_text, "Setting device to TCP/IP mode...")
     out, err = run_cmd(f"{ADB} tcpip 5555")
     if err:
@@ -30,28 +35,28 @@ def connect_adb(ip, output_text, status_label):
         append_output(output_text, err)
 
     if "connected" in out.lower():
-        messagebox.showinfo("Success", f"Connected to {ip}")
-        status_label.config(text=f"Connected: {ip}")
+        safe_ui_call(root, messagebox.showinfo, "Success", f"Connected to {ip}")
+        safe_ui_call(status_label, status_label.config, text=f"Connected: {ip}", fg="green")
     else:
-        messagebox.showerror("Error", f"Failed to connect to {ip}")
-        status_label.config(text="Not connected")
+        safe_ui_call(root, messagebox.showerror, "Error", f"Failed to connect to {ip}")
+        safe_ui_call(status_label, status_label.config, text="Not connected", fg="red")
 
-def disconnect_device(output_text, status_label):
+def disconnect_device(output_text, status_label, root):
     out, err = run_cmd(f"{ADB} disconnect")
     if out:
         append_output(output_text, out)
     if err:
         append_output(output_text, err)
-    messagebox.showinfo("Info", "Disconnected all devices")
-    status_label.config(text="Not connected")
+    safe_ui_call(root, messagebox.showinfo, "Info", "Disconnected all devices")
+    safe_ui_call(status_label, status_label.config, text="Not connected", fg="red")
 
-def reboot_device(output_text):
+def reboot_device(output_text, root):
     out, err = run_cmd(f"{ADB} reboot")
     if out:
         append_output(output_text, out)
     if err:
         append_output(output_text, err)
-    messagebox.showinfo("Info", "Device reboot command sent")
+    safe_ui_call(root, messagebox.showinfo, "Info", "Device reboot command sent")
 
 def launch_scrcpy(output_text):
     append_output(output_text, "Launching scrcpy...")
@@ -109,6 +114,7 @@ def run_custom_command(output_text):
 def clear_output(output_text):
     output_text.delete(1.0, tk.END)
 
+# ---- Main UI ----
 def main():
     root = tk.Tk()
     root.title("Advanced ADB Wireless Control")
@@ -129,14 +135,32 @@ def main():
     btn_frame = tk.Frame(root)
     btn_frame.pack(pady=5)
 
-    tk.Button(btn_frame, text="Connect ADB Wireless", command=lambda: threading.Thread(target=connect_adb, args=(ip_entry.get().strip(), output_text, status_label), daemon=True).start()).grid(row=0, column=0, padx=5, pady=3)
-    tk.Button(btn_frame, text="Disconnect Device", command=lambda: disconnect_device(output_text, status_label)).grid(row=0, column=1, padx=5, pady=3)
-    tk.Button(btn_frame, text="Reboot Device", command=lambda: reboot_device(output_text)).grid(row=0, column=2, padx=5, pady=3)
-    tk.Button(btn_frame, text="Launch scrcpy", command=lambda: launch_scrcpy(output_text)).grid(row=0, column=3, padx=5, pady=3)
-    tk.Button(btn_frame, text="Push File", command=lambda: push_file(output_text)).grid(row=1, column=0, padx=5, pady=3)
-    tk.Button(btn_frame, text="Pull File", command=lambda: pull_file(output_text)).grid(row=1, column=1, padx=5, pady=3)
-    tk.Button(btn_frame, text="List Devices", command=lambda: list_devices(output_text)).grid(row=1, column=2, padx=5, pady=3)
-    tk.Button(btn_frame, text="Run Custom Command", command=lambda: run_custom_command(output_text)).grid(row=1, column=3, padx=5, pady=3)
+    tk.Button(btn_frame, text="Connect ADB Wireless",
+              command=lambda: threading.Thread(target=connect_adb,
+                                               args=(ip_entry.get().strip(), output_text, status_label, root),
+                                               daemon=True).start()).grid(row=0, column=0, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Disconnect Device",
+              command=lambda: disconnect_device(output_text, status_label, root)).grid(row=0, column=1, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Reboot Device",
+              command=lambda: reboot_device(output_text, root)).grid(row=0, column=2, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Launch scrcpy",
+              command=lambda: launch_scrcpy(output_text)).grid(row=0, column=3, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Push File",
+              command=lambda: push_file(output_text)).grid(row=1, column=0, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Pull File",
+              command=lambda: pull_file(output_text)).grid(row=1, column=1, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="List Devices",
+              command=lambda: list_devices(output_text)).grid(row=1, column=2, padx=5, pady=3)
+
+    tk.Button(btn_frame, text="Run Custom Command",
+              command=lambda: run_custom_command(output_text)).grid(row=1, column=3, padx=5, pady=3)
+
     tk.Button(root, text="Clear Output", command=lambda: clear_output(output_text)).pack(pady=5)
 
     root.mainloop()
